@@ -1,6 +1,30 @@
+# deps
 node_modules/
+
+# build / test output
+dist/
+coverage/
+*.tsbuildinfo
+
+# secrets
+.env*
+!.env.example
+
+# local agent state
 .grill/
 .jev/
-.env*
-.DS_Store
+
+# tooling artifacts
 graphify-out/
+
+# logs
+*.log
+npm-debug.log*
+
+# editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
