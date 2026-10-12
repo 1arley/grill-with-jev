@@ -1,0 +1,12 @@
+# Security boundaries
+
+- The key lookup code runs in the same Node process as the API request. The raw key is never part of the JSON request, prompt, stdout, stderr, transcript, or audit log. The host receives only provider, source, variable name, and a `***` plus the last four characters.
+- Only the named provider-key environment variables and `JEV_*` settings are inspected. The skill never reads tool OAuth/session tokens, browser stores, credential databases, or arbitrary filesystem paths.
+- Dotenv files are parsed as text, never sourced, and only allowlisted provider key variables and `JEV_*` overrides are retained. The first lookup returns `consent-required` until the user approves or denies dotenv access; the decision is saved in `~/.config/jev/config.json`. A new `--consent-dotenv` choice covers all listed sources, but older project-only consent does not silently authorize `~/.jev-gateway/.env`. The only paths considered are that gateway file and `.env`, `.env.local`, and `.env.development` in the working project root and Git root.
+- A secret-manager integration is an exact argv array supplied by the user, executed without a shell. It needs a separate saved consent. The command and its output are not logged.
+- Provider calls require HTTPS and an exact provider host. Local HTTP is accepted only for `localhost`, `127.0.0.1`, or `::1` with Ollama/LM Studio. Redirects are rejected. A custom HTTPS URL must exactly match the endpoint the user confirmed in config.
+- Context is read only from allowlisted Markdown paths under the project/Git root, after resolving symlinks. `.env*`, `.git`, `node_modules`, and paths outside the root are ignored. The profile is limited to `.jev/profile.md` or `~/.config/jev/profile.md`; symlinks are refused.
+- Known API keys and common token patterns are redacted from structured output and JSONL logs. Error messages from providers are suppressed. `.grill/` and `.jev/` are ignored by Git.
+- No postinstall hook, obfuscated code, analytics, or network calls beyond the selected provider are included. `--dry-run` estimates prompt tokens and configured cost without making a request; `--mock` uses deterministic offline acceptance.
+
+Before making a first call, inspect `~/.config/jev/config.json` permissions and confirm the model and rate card reflect the current provider/model. Token-to-cost estimates use the configured rates; a provider can charge differently if rates are stale.

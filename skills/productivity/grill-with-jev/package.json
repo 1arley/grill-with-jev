@@ -1,0 +1,26 @@
+{
+  "name": "grill-with-jev",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test scripts/*.test.ts evals/*.test.ts",
+    "eval:mock": "tsx evals/mock.e2e.ts",
+    "eval:canary": "tsx --test evals/canary.e2e.ts",
+    "eval:budget": "tsx evals/budget.e2e.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "4.0.79",
+    "@ai-sdk/gateway": "4.0.111",
+    "@ai-sdk/google": "4.0.94",
+    "@ai-sdk/openai-compatible": "3.0.68",
+    "ai": "7.0.138",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
+  }
+}
