@@ -243,6 +243,43 @@ function pricing(config: JevConfig, env: NodeJS.ProcessEnv) {
     ? { inputRate, outputRate, maxUsd } : undefined;
 }
 
+// shortcut: System One has no text channel, so rationale/assumptions are derived from
+// choice probabilities. Upgrade by sending the round to a text model if richer prose matters.
+async function generateSystemOne(provider: ResolvedProvider, request: Request, profile: string, context: string) {
+  const endpoint = new URL("/v1/systemone", provider.baseUrl ?? "https://api.typesafe.ai/v1");
+  const state = [profile, context, JSON.stringify(request.transcript), JSON.stringify(request.questions)].filter(Boolean).join("\n\n");
+  const response = await fetch(endpoint, {
+    method: "POST", redirect: "error" as const, signal: AbortSignal.timeout(45000),
+    headers: { authorization: `Bearer ${provider.key ?? ""}`, "content-type": "application/json" },
+    body: JSON.stringify({
+      model: provider.model,
+      state,
+      questions: Object.fromEntries(request.questions.map(question => [question.questionId, {
+        type: "choice",
+        instructions: `Decide if the proposed recommendation for '${question.title}' is right for this project. Answer 'aceitar' when it should be adopted as is, 'ajustar' when it is wrong or incomplete, and 'escalar' when it needs a human decision or carries irreversible, security, money, or third-party data consequences.`,
+        criteria: { aceitar: question.recommendation, ajustar: "A recomendação está errada, incompleta ou fora de escopo para este projeto.", escalar: "A decisão exige um humano por risco, confiança baixa ou ambiguidade." },
+      }])),
+    }),
+    // secureFetch keeps the host allowlist; the direct URL above is validated by assertSafeBaseUrl.
+  } satisfies Record<string, unknown>);
+  if (!response.ok) throw new ProviderRequestError();
+  const payload = await response.json() as { answers?: Record<string, { type: string; choice: string; confidence: number; probabilities: Record<string, number> }>; usage?: TokenUsage };
+  const answers = request.questions.flatMap(question => {
+    const answer = payload.answers?.[question.questionId];
+    if (answer?.type !== "choice") return [];
+    const decision = answer.choice === "aceitar" ? "accept" : answer.choice === "ajustar" ? "amend" : "escalate";
+    const top = Object.entries(answer.probabilities).sort((left, right) => right[1] - left[1]).slice(0, 2)
+      .map(([name, value]) => `${name} ${value.toFixed(2)}`).join(", ");
+    return [{
+      questionId: question.questionId, decision, answer: question.recommendation,
+      rationale: `System One: ${top}.`, confidence: answer.confidence,
+      assumptions: [`probabilidades: ${top}`, "System One retorna probabilidades, não justificativa em prosa."],
+    }];
+  });
+  if (answers.length !== request.questions.length) throw new ProviderRequestError();
+  return { round: JevRound.parse({ round: request.round, answers }), usage: payload.usage ?? {} };
+}
+
 async function generate(
   model: ReturnType<typeof makeModel>, prompt: string, provider: ResolvedProvider, feedback: string | undefined,
   reserveAttempt: (inputEstimate: number) => Promise<"reserved" | "token-limit" | "cost-limit" | "round-limit" | "round-sequence" | "session-busy">,
@@ -357,6 +394,11 @@ async function main(): Promise<void> {
     validated = await retryInvalidRound(async feedback => {
       if (mock) return { value: mockRound(request) };
       try {
+        if (resolved!.provider === "typesafe") {
+          const result = await generateSystemOne(resolved!, request, profile, context);
+          if (result.usage) recordUsage(result.usage);
+          return { value: result.round };
+        }
         const result = await generate(makeModel(resolved!, config), prompt, resolved!, feedback?.join("; "), reserveAttempt, recordUsage);
         return { value: result.round };
       } catch (error) {
