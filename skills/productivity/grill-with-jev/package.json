@@ -15,7 +15,7 @@
     "@ai-sdk/gateway": "4.0.111",
     "@ai-sdk/google": "4.0.94",
     "@ai-sdk/openai-compatible": "3.0.68",
-    "ai": "7.0.138",
+    "ai": "7.0.142",
     "zod": "4.6.7"
   },
   "devDependencies": {
