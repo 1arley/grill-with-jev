@@ -11,7 +11,7 @@
     "eval:budget": "tsx evals/budget.e2e.ts"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "4.0.79",
+    "@ai-sdk/anthropic": "4.0.81",
     "@ai-sdk/gateway": "4.0.111",
     "@ai-sdk/google": "4.0.94",
     "@ai-sdk/openai-compatible": "3.0.68",
