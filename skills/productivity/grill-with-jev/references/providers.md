@@ -4,10 +4,10 @@
 
 | Provider | Process/dotenv key names | Default model | Destination host |
 |---|---|---|---|
-| TypeSafe (official) | `TYPESAFE_API_KEY` | `jev-latest` | User-confirmed HTTPS endpoint; no direct API host is documented here |
+| TypeSafe (official) | `TYPESAFE_API_KEY` | `jev-latest` | User-confirmed base URL; remote must be HTTPS, confirmed loopback HTTP allowed for a local System One gateway |
 | OpenRouter | `OPENROUTER_API_KEY` | `typesafe/jev-1.13` | `openrouter.ai` |
 | Vercel AI Gateway | `AI_GATEWAY_API_KEY` | `typesafe-ai/jev` | `ai-gateway.vercel.sh` |
-| OpenCode Zen | `OPENCODE_API_KEY` | `jev-1.13-free` | User-confirmed HTTPS endpoint; no direct API host is documented here |
+| OpenCode Zen | `OPENCODE_API_KEY` | `jev-1.13-free` | User-confirmed base URL; remote must be HTTPS, confirmed loopback HTTP allowed for a local System One gateway |
 | Anthropic | `ANTHROPIC_API_KEY` | — | `api.anthropic.com` |
 | OpenAI | `OPENAI_API_KEY` | — | `api.openai.com` |
 | Gemini | `GEMINI_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY`, `GOOGLE_API_KEY` | — | `generativelanguage.googleapis.com` |
