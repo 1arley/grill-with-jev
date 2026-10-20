@@ -1,5 +1,12 @@
 # Grill with JEV
 
+Para atualizar/instalar localmente a partir da raiz deste repo (um comando: reinstala a skill, `npm ci` das dependências e um dry-run de verificação):
+
+```sh
+./install.sh
+```
+
+
 An explicitly invoked variant of Matt Pocock's MIT-licensed `grilling` skill. The agent maps a decision tree and asks each frontier in rounds; JEV, an automated stand-in for the user, returns validated decisions. The human still answers escalations and confirms the completed decision record before the agent acts.
 
 JEV is the user's persona. It decides from an approved profile, selected project documents, and the session transcript. The host agent remains responsible for facts; JEV does not browse or research. The profile may contain values, preferences, criteria, vetoes, style, and real past decisions. Answers use a Zod contract exported as JSON Schema, are checked before use, and carry `user`, `jev`, or `jev-subagent` provenance in the transcript and final record.
