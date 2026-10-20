@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { findProviderKey, providerKeys, saveConfig, type JevConfig } from "./find-provider-key.js";
+import { findProviderKey, normalizeProvider, providerKeys, saveConfig, type JevConfig } from "./find-provider-key.js";
 import { redact, maskedKey } from "./redact.js";
 import { readApprovedMarkdown } from "./safe-files.js";
 
@@ -124,7 +124,7 @@ async function run(): Promise<void> {
   if (flag("--confirm-base-url")) {
     const baseUrl = get("--confirm-base-url");
     if (!baseUrl || !flag("--approved")) throw new Error("custom endpoint confirmation requires --approved");
-    const provider = get("--provider")?.toLowerCase();
+    const provider = normalizeProvider(get("--provider"))?.toLowerCase();
     if (!provider || !allowedProviders.has(provider)) throw new Error("custom endpoint requires a supported --provider");
     const cfg = await config(); cfg.provider = provider; cfg.baseUrl = baseUrl; cfg.customBaseUrlConfirmed = baseUrl;
     await saveConfig(cfg, configPath); process.stdout.write(JSON.stringify({ saved: "endpoint", provider, host: new URL(baseUrl).host }) + "\n"); return;

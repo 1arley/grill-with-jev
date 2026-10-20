@@ -198,3 +198,38 @@ test("custom endpoints require exact confirmation and official hosts are accepte
   assert.equal(assertSafeBaseUrl("ollama", "http://localhost:11434/v1", {})!.hostname, "localhost");
   assert.throws(() => assertSafeBaseUrl("openai", "http://localhost:9999/v1", { customBaseUrlConfirmed: "http://localhost:9999/v1" }), /confirmation/);
 });
+
+test("a confirmed local System One gateway may use plain HTTP on loopback only", () => {
+  const confirmed = { provider: "opencode-zen", customBaseUrlConfirmed: "http://localhost:20128/v1" };
+  assert.equal(assertSafeBaseUrl("opencode-zen", "http://localhost:20128/v1", confirmed)!.hostname, "localhost");
+  assert.equal(assertSafeBaseUrl("opencode-zen", "http://127.0.0.1:20128/v1", { provider: "opencode-zen", customBaseUrlConfirmed: "http://127.0.0.1:20128/v1" })!.hostname, "127.0.0.1");
+  assert.throws(() => assertSafeBaseUrl("opencode-zen", "http://localhost:20128/v1", {}), /confirmation/);
+  const remote = { provider: "opencode-zen", customBaseUrlConfirmed: "http://zen.example/v1" };
+  assert.throws(() => assertSafeBaseUrl("opencode-zen", "http://zen.example/v1", remote), /confirmation/);
+  assert.throws(() => assertSafeBaseUrl("opencode-zen", "https://zen.example/v1", remote), /confirmation/);
+});
+
+test("the advisor gateway provider name reuses saved gateway credentials", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "jev-alias-"));
+  try {
+    const configPath = join(dir, "config.json");
+    await writeFile(configPath, JSON.stringify({ provider: "openai" }));
+    const found = await findProviderKey({ cwd: dir, homeDir: dir, configPath, env: { JEV_PROVIDER: "opencode", OPENCODE_API_KEY: "gateway-secret" }, dotenvValues: {} });
+    assert.equal(found.resolved?.provider, "opencode-zen");
+    assert.equal(found.resolved?.key, "gateway-secret");
+    assert.equal(found.resolved?.model, "jev-1.13-free");
+    assert.equal(found.resolved?.report.variable, "OPENCODE_API_KEY");
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test("a confirmed loopback JEV_BASE_URL resolves without overrides", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "jev-loopback-"));
+  try {
+    const configPath = join(dir, "config.json");
+    await writeFile(configPath, JSON.stringify({ provider: "opencode-zen", baseUrl: "http://localhost:20128/v1", customBaseUrlConfirmed: "http://localhost:20128/v1" }));
+    const found = await findProviderKey({ cwd: dir, homeDir: dir, configPath, env: { OPENCODE_API_KEY: "gateway-secret" }, dotenvValues: {} });
+    assert.equal(found.resolved?.provider, "opencode-zen");
+    assert.equal(found.resolved?.baseUrl, "http://localhost:20128/v1");
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+

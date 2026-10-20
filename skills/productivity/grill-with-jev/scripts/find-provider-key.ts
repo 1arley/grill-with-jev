@@ -35,6 +35,15 @@ export type KeyReport = { provider: string; source: string; variable: string; ma
 export type ResolvedProvider = { provider: string; key?: string; model?: string; baseUrl?: string; report: KeyReport };
 export type ProviderLookup = { resolved?: ResolvedProvider; config: JevConfig; consentRequired?: string; secrets: string[] };
 
+// shortcut: jev-advisor-gateway writes JEV_PROVIDER=opencode for the OpenCode Zen
+// integration; support reuse of its ~/.jev-gateway/.env values verbatim.
+export const providerAliases: Record<string, string> = { opencode: "opencode-zen" };
+
+export function normalizeProvider(provider: string | undefined): string | undefined {
+  if (!provider) return provider;
+  return providerAliases[provider] ?? provider;
+}
+
 export function parseDotenv(text: string): Record<string, string> {
   const values: Record<string, string> = {};
   for (const line of text.split(/\r?\n/)) {
@@ -68,7 +77,8 @@ export function assertSafeBaseUrl(provider: string, baseUrl: string | undefined,
     fireworks: ["api.fireworks.ai"],
   };
   if (url.protocol === "https:" && official[provider]?.includes(host)) return url;
-  if (config.provider?.toLowerCase() === provider && config.customBaseUrlConfirmed === baseUrl && url.protocol === "https:") return url;
+  if (config.provider?.toLowerCase() === provider && config.customBaseUrlConfirmed === baseUrl
+    && (url.protocol === "https:" || (local && url.protocol === "http:"))) return url;
   throw new Error("Custom provider endpoints require a matching confirmation in ~/.config/jev/config.json.");
 }
 
@@ -129,8 +139,9 @@ export async function findProviderKey(options: {
 
   const processKeyProvider = providerOrder.find(name => providerKeys[name].some(key => env[key]));
   const dotenvKeyProvider = providerOrder.find(name => providerKeys[name].some(key => dotenv[key]));
-  const provider = env.JEV_PROVIDER?.toLowerCase() ?? processKeyProvider
+  const rawProvider = env.JEV_PROVIDER?.toLowerCase() ?? processKeyProvider
     ?? dotenv.JEV_PROVIDER?.toLowerCase() ?? dotenvKeyProvider ?? config.provider?.toLowerCase();
+  const provider = normalizeProvider(rawProvider);
   const matchingConfig = config.provider?.toLowerCase() === provider;
   const matchingKeyConfig = (config.apiKeyProvider ?? config.provider)?.toLowerCase() === provider;
   const secrets = [...keyNames.map(name => env[name]), ...dotenvSecrets, config.apiKey].filter((value): value is string => Boolean(value));
