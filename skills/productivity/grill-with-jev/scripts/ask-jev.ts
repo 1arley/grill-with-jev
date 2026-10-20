@@ -336,7 +336,7 @@ async function main(): Promise<void> {
   const maxTokens = Number(process.env.JEV_MAX_SESSION_TOKENS ?? config.maxSessionTokens ?? 20000);
   // shortcut: System One probabilities on decision questions commonly sit in the
   // 0.2–0.5 range; keeping the text-model default (0.6) escalates nearly every answer.
-  const usesSystemOne = !mock && ["typesafe", "opencode-zen"].includes(lookup.resolved?.provider ?? "");
+  const usesSystemOne = !mock && ["typesafe", "opencode-zen", "openjev"].includes(lookup.resolved?.provider ?? "");
   const defaultConfidence = usesSystemOne ? 0.35 : 0.6;
   const confidenceThreshold = Number(process.env.JEV_CONFIDENCE_THRESHOLD ?? config.confidenceThreshold ?? defaultConfidence);
   if (!Number.isSafeInteger(maxRounds) || maxRounds < 1 || !Number.isSafeInteger(maxTokens) || maxTokens < 1
@@ -352,7 +352,7 @@ async function main(): Promise<void> {
 
   const resolved = lookup.resolved;
   const secrets = lookup.secrets;
-  if (!mock && ["typesafe", "opencode-zen"].includes(resolved!.provider) && !resolved!.baseUrl) {
+  if (!mock && ["typesafe", "opencode-zen", "openjev"].includes(resolved!.provider) && !resolved!.baseUrl) {
     process.stdout.write(JSON.stringify({ status: "endpoint-required", provider: resolved!.provider, model: resolved!.model, sessionId }) + "\n"); return;
   }
   const profile = await profileText(root, secrets);
@@ -401,7 +401,7 @@ async function main(): Promise<void> {
         // shortcut: both TypeSafe and the OpenCode Zen integration expose the direct
         // System One route (POST /v1/systemone); OpenCode Zen's chat-completions
         // adapter cannot express System One choice questions.
-        if (["typesafe", "opencode-zen"].includes(resolved!.provider)) {
+        if (["typesafe", "opencode-zen", "openjev"].includes(resolved!.provider)) {
           const result = await generateSystemOne(resolved!, request, profile, context);
           if (result.usage) recordUsage(result.usage);
           return { value: result.round };

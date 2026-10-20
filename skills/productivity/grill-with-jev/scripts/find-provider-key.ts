@@ -7,7 +7,7 @@ import { randomUUID } from "node:crypto";
 import { maskedKey } from "./redact.js";
 
 const execFileAsync = promisify(execFile);
-export const providerOrder = ["typesafe", "openrouter", "ai-gateway", "opencode-zen", "anthropic", "openai", "gemini", "mistral", "groq", "xai", "deepseek", "together", "fireworks", "azure"] as const;
+export const providerOrder = ["typesafe", "openrouter", "ai-gateway", "opencode-zen", "openjev", "anthropic", "openai", "gemini", "mistral", "groq", "xai", "deepseek", "together", "fireworks", "azure"] as const;
 export const providerKeys: Record<string, string[]> = {
   typesafe: ["TYPESAFE_API_KEY"],
   "opencode-zen": ["OPENCODE_API_KEY"],
@@ -17,10 +17,13 @@ export const providerKeys: Record<string, string[]> = {
   mistral: ["MISTRAL_API_KEY"], groq: ["GROQ_API_KEY"], xai: ["XAI_API_KEY"],
   deepseek: ["DEEPSEEK_API_KEY"], together: ["TOGETHER_API_KEY"],
   fireworks: ["FIREWORKS_API_KEY"], azure: ["AZURE_OPENAI_API_KEY"],
+  // shortcut: openjev ignores Authorization; the variable only marks it configured.
+  openjev: ["OPENJEV_KEY"],
 };
 export const providerModels: Record<string, string> = {
   typesafe: "jev-latest", openrouter: "typesafe/jev-1.13",
   "ai-gateway": "typesafe-ai/jev", "opencode-zen": "jev-1.13-free",
+  openjev: "openai/gpt-oss-20b",
 };
 
 export type JevConfig = {

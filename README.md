@@ -35,6 +35,7 @@ The user chooses the provider. Set `JEV_PROVIDER` when more than one provider ke
 | OpenRouter | `OPENROUTER_API_KEY` | `typesafe/jev-1.13` |
 | Vercel AI Gateway | `AI_GATEWAY_API_KEY` | `typesafe-ai/jev` |
 | OpenCode Zen | `OPENCODE_API_KEY` | `jev-1.13-free` |
+| OpenJev (local) | `OPENJEV_KEY` (placeholder) | `openai/gpt-oss-20b` |
 
 ```sh
 npm --prefix "$SKILL_DIR" exec -- tsx "$SKILL_DIR/scripts/setup.ts" --set-model openai <current-model-id> --approved
