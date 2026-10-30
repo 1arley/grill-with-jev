@@ -1,0 +1,43 @@
+name: Sync to skills repo
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'skills/productivity/grill-with-jev/**'
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src
+
+      - uses: actions/checkout@v4
+        with:
+          repository: 1arley/skills
+          token: ${{ secrets.SKILLS_REPO_PAT }}
+          path: dst
+
+      - name: Sync skill folder
+        run: |
+          rsync -av --delete --exclude node_modules \
+            src/skills/productivity/grill-with-jev/ \
+            dst/skills/productivity/grill-with-jev/
+
+      - name: Commit and push
+        working-directory: dst
+        run: |
+          git config user.name "grill-with-jev sync"
+          git config user.email "sync@noreply"
+          git add skills/productivity/grill-with-jev
+          if git diff --cached --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git commit -m "sync: grill-with-jev from ${{ github.sha }}"
+          git push
