@@ -13,11 +13,11 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: src
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: 1arley/skills
           token: ${{ secrets.SKILLS_REPO_PAT }}
