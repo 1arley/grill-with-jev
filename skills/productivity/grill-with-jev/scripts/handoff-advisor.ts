@@ -102,11 +102,11 @@ async function main(): Promise<void> {
   if (lookup.consentRequired) { write({ status: "consent-required", consent: lookup.consentRequired, sessionId }); process.exitCode = 2; return; }
   if (!lookup.resolved) { write({ status: "no-provider-key", sessionId }); process.exitCode = 2; return; }
   const resolved = lookup.resolved;
-  if (["typesafe", "opencode-zen"].includes(resolved.provider) && !resolved.baseUrl) {
+  if (["typesafe", "opencode-zen", "laya", "jiwo"].includes(resolved.provider) && !resolved.baseUrl) {
     write({ status: "endpoint-required", provider: resolved.provider, model: resolved.model, sessionId });
     process.exitCode = 2; return;
   }
-  const sessionPrice = ["ollama", "lm-studio"].includes(resolved.provider) ? undefined : pricing(lookup.config, process.env);
+  const sessionPrice = ["ollama", "lm-studio", "laya", "jiwo"].includes(resolved.provider) ? undefined : pricing(lookup.config, process.env);
   if (!sessionPrice) { write({ status: "pricing-required", sessionId }); process.exitCode = 2; return; }
   const { state, body } = handoffQuestion(input);
   body.model = resolved.model ?? "";
@@ -118,7 +118,7 @@ async function main(): Promise<void> {
   try {
     const response = await fetch(new URL("/v1/systemone", resolved.baseUrl ?? "https://api.typesafe.ai/v1"), {
       method: "POST", redirect: "error" as const, signal: AbortSignal.timeout(45000),
-      headers: { authorization: `Bearer ${resolved.key ?? ""}`, "content-type": "application/json" },
+      headers: { ...(resolved.key ? { authorization: `Bearer ${resolved.key}` } : {}), "content-type": "application/json" },
       body: JSON.stringify(body),
     } satisfies Record<string, unknown>);
     if (!response.ok) throw new ProviderRequestError();

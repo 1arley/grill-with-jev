@@ -222,6 +222,24 @@ test("the advisor gateway provider name reuses saved gateway credentials", async
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
+test("Laya and Jiwo resolve keyless loopback System One defaults", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "jev-local-providers-"));
+  try {
+    const configPath = join(dir, "config.json");
+    await writeFile(configPath, JSON.stringify({ dotenvConsent: true, gatewayDotenvConsent: true }));
+    const laya = await findProviderKey({ cwd: dir, homeDir: dir, configPath, env: { JEV_PROVIDER: "laya" }, dotenvValues: {} });
+    assert.deepEqual(laya.resolved, {
+      provider: "laya", model: "multilingual", baseUrl: "http://127.0.0.1:8000/v1/systemone",
+      report: { provider: "laya", source: "local", variable: "none", masked: "none" },
+    });
+    const jiwo = await findProviderKey({ cwd: dir, homeDir: dir, configPath, env: { JEV_PROVIDER: "jiwo" }, dotenvValues: {} });
+    assert.deepEqual(jiwo.resolved, {
+      provider: "jiwo", model: "jiwo-0.8b", baseUrl: "http://127.0.0.1:8765/v1/systemone",
+      report: { provider: "jiwo", source: "local", variable: "none", masked: "none" },
+    });
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
 test("a confirmed loopback JEV_BASE_URL resolves without overrides", async () => {
   const dir = await mkdtemp(join(tmpdir(), "jev-loopback-"));
   try {

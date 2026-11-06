@@ -27,7 +27,7 @@ Node.js 22 or newer is required. There are no install hooks. This skill has `dis
 
 ## Setup JEV
 
-The user chooses the provider. Set `JEV_PROVIDER` when more than one provider key is available; otherwise the first detected key in the documented provider order is selected. The four JEV integrations have the supplied default model IDs below; `JEV_MODEL` or saved setup can override them. Configure current input/output rates and a session ceiling before paid requests.
+The user chooses the provider. Set `JEV_PROVIDER` when more than one provider key is available; otherwise the first detected key in the documented provider order is selected. The JEV integrations have the supplied default model IDs below; `JEV_MODEL` or saved setup can override them. Configure current input/output rates and a session ceiling before paid requests.
 
 | Provider | Key variable | Default model |
 |---|---|---|
@@ -36,6 +36,8 @@ The user chooses the provider. Set `JEV_PROVIDER` when more than one provider ke
 | Vercel AI Gateway | `AI_GATEWAY_API_KEY` | `typesafe-ai/jev` |
 | OpenCode Zen | `OPENCODE_API_KEY` | `jev-1.13-free` |
 | OpenJev (local) | `OPENJEV_KEY` (placeholder) | `openai/gpt-oss-20b` |
+| Laya (local) | no key by default; optional `LAYA_API_KEY` | `multilingual` |
+| Jiwo (local) | no key by default; optional `JIWO_API_KEY` | `jiwo-0.8b` |
 
 ```sh
 npm --prefix "$SKILL_DIR" exec -- tsx "$SKILL_DIR/scripts/setup.ts" --set-model openai <current-model-id> --approved
@@ -60,7 +62,7 @@ Pipe the approved Markdown draft to that command. Choose `global` instead of `re
 
 ## How credentials are found
 
-Resolution order is explicit `JEV_*` settings, allowlisted process environment keys, consented dotenv files, `~/.config/jev/config.json`, then an exact secret-manager argv configured by the user. With multiple keys, `JEV_PROVIDER` wins; otherwise the provider order is TypeSafe, OpenRouter, Vercel AI Gateway, OpenCode Zen, Anthropic, OpenAI, Gemini, Mistral, Groq, xAI, DeepSeek, Together, Fireworks, Azure. Local Ollama and LM Studio need no key.
+Resolution order is explicit `JEV_*` settings, allowlisted process environment keys, consented dotenv files, `~/.config/jev/config.json`, then an exact secret-manager argv configured by the user. With multiple keys, `JEV_PROVIDER` wins; otherwise the provider order is TypeSafe, OpenRouter, Vercel AI Gateway, OpenCode Zen, OpenJev, Laya, Jiwo, Anthropic, OpenAI, Gemini, Mistral, Groq, xAI, DeepSeek, Together, Fireworks, Azure. Laya and Jiwo use loopback System One endpoints and need no key by default; local Ollama and LM Studio also need no key.
 
 The process environment checks `JEV_PROVIDER`, `JEV_API_KEY`, `JEV_MODEL`, `JEV_BASE_URL`, and only these provider names: `TYPESAFE_API_KEY`, `OPENROUTER_API_KEY`, `AI_GATEWAY_API_KEY`, `OPENCODE_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY`, `GOOGLE_API_KEY`, `MISTRAL_API_KEY`, `GROQ_API_KEY`, `XAI_API_KEY`, `DEEPSEEK_API_KEY`, `TOGETHER_API_KEY`, `FIREWORKS_API_KEY`, and `AZURE_OPENAI_API_KEY` with `AZURE_OPENAI_ENDPOINT`. Dotenv parsing uses the same `JEV_*` overrides and provider key names, but not `AZURE_OPENAI_ENDPOINT`; that endpoint is read only from process environment or saved config.
 

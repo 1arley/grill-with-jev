@@ -12,7 +12,7 @@ const configPath = join(homedir(), ".config", "jev", "config.json");
 const args = process.argv.slice(2);
 const get = (name: string) => { const index = args.indexOf(name); return index < 0 ? undefined : args[index + 1]; };
 const flag = (name: string) => args.includes(name);
-const allowedProviders = new Set(["typesafe", "openrouter", "ai-gateway", "opencode-zen", "anthropic", "openai", "gemini", "mistral", "groq", "xai", "deepseek", "together", "fireworks", "azure", "ollama", "lm-studio"]);
+const allowedProviders = new Set(["typesafe", "openrouter", "ai-gateway", "opencode-zen", "openjev", "laya", "jiwo", "anthropic", "openai", "gemini", "mistral", "groq", "xai", "deepseek", "together", "fireworks", "azure", "ollama", "lm-studio"]);
 
 async function config(): Promise<JevConfig> {
   try { return JSON.parse(await readFile(configPath, "utf8")) as JevConfig; }

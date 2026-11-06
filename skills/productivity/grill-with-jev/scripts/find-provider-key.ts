@@ -7,7 +7,7 @@ import { randomUUID } from "node:crypto";
 import { maskedKey } from "./redact.js";
 
 const execFileAsync = promisify(execFile);
-export const providerOrder = ["typesafe", "openrouter", "ai-gateway", "opencode-zen", "openjev", "anthropic", "openai", "gemini", "mistral", "groq", "xai", "deepseek", "together", "fireworks", "azure"] as const;
+export const providerOrder = ["typesafe", "openrouter", "ai-gateway", "opencode-zen", "openjev", "laya", "jiwo", "anthropic", "openai", "gemini", "mistral", "groq", "xai", "deepseek", "together", "fireworks", "azure"] as const;
 export const providerKeys: Record<string, string[]> = {
   typesafe: ["TYPESAFE_API_KEY"],
   "opencode-zen": ["OPENCODE_API_KEY"],
@@ -19,11 +19,13 @@ export const providerKeys: Record<string, string[]> = {
   fireworks: ["FIREWORKS_API_KEY"], azure: ["AZURE_OPENAI_API_KEY"],
   // shortcut: openjev ignores Authorization; the variable only marks it configured.
   openjev: ["OPENJEV_KEY"],
+  // Laya and Jiwo are local by default; these keys are optional service auth.
+  laya: ["LAYA_API_KEY"], jiwo: ["JIWO_API_KEY"],
 };
 export const providerModels: Record<string, string> = {
   typesafe: "jev-latest", openrouter: "typesafe/jev-1.13",
   "ai-gateway": "typesafe-ai/jev", "opencode-zen": "jev-1.13-free",
-  openjev: "openai/gpt-oss-20b",
+  openjev: "openai/gpt-oss-20b", laya: "multilingual", jiwo: "jiwo-0.8b",
 };
 
 export type JevConfig = {
@@ -67,7 +69,7 @@ export function assertSafeBaseUrl(provider: string, baseUrl: string | undefined,
   if (url.username || url.password || url.search || url.hash) throw new Error("Provider endpoint contains a forbidden URL component.");
   const host = url.hostname.toLowerCase();
   const local = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(host);
-  if (local && ["ollama", "lm-studio"].includes(provider)) {
+  if (local && ["ollama", "lm-studio", "laya", "jiwo"].includes(provider)) {
     if (!(["http:", "https:"].includes(url.protocol))) throw new Error("Local provider endpoint must use HTTP(S).");
     return url;
   }
@@ -160,6 +162,19 @@ export async function findProviderKey(options: {
     if (requestedBaseUrl && (!matchingConfig || config.customBaseUrlConfirmed !== baseUrl)) throw new Error("JEV_BASE_URL requires explicit confirmation recorded for this provider in config.json.");
     assertSafeBaseUrl(provider, baseUrl, config);
     return { config, secrets, resolved: { provider, model: env.JEV_MODEL ?? dotenv.JEV_MODEL ?? (matchingConfig ? config.model : undefined), baseUrl, report: { provider, source: "local", variable: "none", masked: "none" } } };
+  }
+  if (provider === "laya" || provider === "jiwo") {
+    const requestedBaseUrl = env.JEV_BASE_URL ?? dotenv.JEV_BASE_URL;
+    const defaultBaseUrl = provider === "laya" ? "http://127.0.0.1:8000/v1/systemone" : "http://127.0.0.1:8765/v1/systemone";
+    const baseUrl = requestedBaseUrl ?? (matchingConfig ? config.baseUrl : undefined) ?? defaultBaseUrl;
+    if (requestedBaseUrl && (!matchingConfig || config.customBaseUrlConfirmed !== baseUrl)) throw new Error("JEV_BASE_URL requires explicit confirmation recorded for this provider in config.json.");
+    assertSafeBaseUrl(provider, baseUrl, config);
+    const keyName = providerKeys[provider]![0];
+    const key = env.JEV_API_KEY ?? env[keyName] ?? dotenv.JEV_API_KEY ?? dotenv[keyName] ?? (matchingKeyConfig ? config.apiKey : undefined);
+    const report = key
+      ? { provider, source: env.JEV_API_KEY || env[keyName] ? "env" : dotenv.JEV_API_KEY || dotenv[keyName] ? "dotenv" : "config", variable: env.JEV_API_KEY ? "JEV_API_KEY" : keyName, masked: maskedKey(key) }
+      : { provider, source: "local", variable: "none", masked: "none" };
+    return { config, secrets, resolved: { provider, ...(key ? { key } : {}), model: env.JEV_MODEL ?? dotenv.JEV_MODEL ?? (matchingConfig ? config.model : undefined) ?? providerModels[provider], baseUrl, report } };
   }
   if (!providerKeys[provider]) throw new Error("Unsupported provider.");
 
